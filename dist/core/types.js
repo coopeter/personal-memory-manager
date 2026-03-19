@@ -1,5 +1,3 @@
 "use strict";
-/**
- * Personal Memory Manager - Core Types
- */
+// 核心类型定义
 Object.defineProperty(exports, "__esModule", { value: true });

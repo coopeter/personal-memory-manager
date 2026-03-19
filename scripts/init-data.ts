@@ -1,126 +1,109 @@
-#!/usr/bin/env node
-import { Storage } from '../src/core/storage'
-import { ProjectManager } from '../src/core/project'
-import { config } from 'dotenv'
-import { hash } from 'bcrypt'
+// 初始化数据脚本 - 创建默认管理员账号和第一个项目
 
-config()
+import { LocalStorageProvider } from '../src/providers/local';
+import { ProjectManager } from '../src/core/project';
 
-async function init() {
-  const storage = new Storage({
-    basePath: './data',
-    useLanceDB: true,
-    provider: 'local',
-  })
+// 配置
+const dataPath = process.env.DATA_PATH || './data';
+const defaultUsername = process.env.DEFAULT_USERNAME || 'admin';
+const defaultPassword = process.env.DEFAULT_PASSWORD || 'password';
 
-  await storage.init()
+async function main() {
+  console.log('Initializing Personal Memory Manager...');
 
-  // Create default admin user
-  const hashedPassword = await hash('password', 10)
-  await storage.createUser({
-    username: 'admin',
-    password: hashedPassword,
-  })
+  // 初始化存储
+  const storage = new LocalStorageProvider({
+    basePath: dataPath,
+    useLanceDB: false,
+  });
+  await storage.initialize();
 
-  // Create first project: "personal-memory-manager"
-  const pm = new ProjectManager(storage)
-  const project = await pm.createProject(
-    'Personal Memory Manager',
-    '开发一个通用的个人记忆与文档管理OpenClaw Skill'
-  )
+  // 创建默认管理员
+  const existingAdmin = await storage.getUserByUsername(defaultUsername);
+  if (existingAdmin) {
+    console.log(`Admin user "${defaultUsername}" already exists, skipping...`);
+  } else {
+    await storage.createUser({
+      username: defaultUsername,
+      passwordHash: defaultPassword, // plaintext here will be hashed by bcrypt in createUser
+      isAdmin: true,
+    });
+    console.log(`Created default admin user: ${defaultUsername} / ${defaultPassword}`);
+  }
 
-  // Create root folder
-  const rootFolder = await pm.createFolder(project.id, null, '项目讨论', '记录我们开发这个项目的讨论过程')
+  // 创建第一个项目 - 开发讨论记录
+  const existingProjects = await storage.listProjects();
+  if (existingProjects.length > 0) {
+    console.log('Projects already exist, skipping first project creation...');
+  } else {
+    const projectManager = new ProjectManager(storage);
+    await projectManager.initialize();
 
-  // Import our conversation content
-  const conversationContent = `# 个人记忆管理器 - 开发讨论记录
+    const project = await storage.createProject({
+      name: 'Personal Memory Manager Development',
+      description: 'Development discussion and requirements for the Personal Memory Manager OpenClaw Skill',
+      parentId: null,
+      tags: ['development', 'openclaw', 'skill'],
+    });
 
-## 需求讨论
+    console.log(`Created first project: ${project.name} (${project.id})`);
 
-我们要开发一个通用的记忆和文档管理功能，作为 OpenClaw Skill 发布。主要功能：
+    // 创建根文件夹
+    const rootFolder = await storage.createFolder({
+      projectId: project.id,
+      parentId: null,
+      name: 'Discussion',
+      description: 'Development requirements and discussion',
+    });
 
-1. **完整记录所有对话**
-   - 记录所有沟通内容，不丢失任何信息
-   - 区分三种内容类型：灵感片段、讨论过程、最终成果
+    console.log(`Created root folder: ${rootFolder.name} (${rootFolder.id})`);
 
-2. **按项目分组管理**
-   - 用户可以自定义创建多个项目
-   - 每个项目内用户可以自定义多级文件夹结构
-   - 用户定义文件夹用途后，AI 自动把对话内容归类放入对应文件夹
-   - 支持未归类到任何项目的内容，放在公共区域，支持标签和搜索
+    // 创建第一个文档 - 当前讨论
+    const content = `# Personal Memory Manager Development Discussion
 
-3. **工作进度追踪**
-   - 记录每个项目当前进度
-   - 按天记录每个项目做了什么
-   - 重启/隔天之后能快速恢复上下文，记得之前聊到哪了
+This document contains the complete development discussion for the Personal Memory Manager OpenClaw Skill.
 
-4. **存储方案**
-   - LanceDB 向量索引，用于语义检索
-   - Markdown 文件存储原始内容，方便同步和通用访问
-   - 元数据 JSON 保存结构信息
+## Requirements
 
-5. **可分发为 Skill**
-   - 做成一个通用的 OpenClaw Skill，不依赖飞书（飞书作为可选项）
-   - 其他 OpenClaw 实例部署后也能使用
+1. ✅ Automatically record all conversations, categorized by projects and user-defined folders
+2. ✅ Provides semantic/full-text search, progress tracking
+3. ✅ Responsive web management interface
+4. ✅ Distributable as reusable OpenClaw Skill, no mandatory Feishu dependency
+5. ✅ Optional Feishu integration
+6. ✅ Standalone version with account/password login
+7. ✅ Feishu version can reuse Feishu authentication
 
-6. **前端界面**
-   - 需要 Web 管理界面，方便浏览查看
-   - 如果能集成到飞书更好，飞书内微应用，支持移动端访问
+## Technology Stack
 
-7. **文件管理操作**
-   - 重命名：支持对已保存的对话/文档重命名
-   - 移动：支持在不同项目/文件夹之间移动文档
-   - 回收站：删除文件先放进回收站，不直接删除，支持恢复
+- Backend: TypeScript + Express + LanceDB + JWT + Zod
+- Frontend: React 18 + TypeScript + Tailwind CSS
+- Storage: LanceDB for vector search/metadata, Markdown files for original content
 
-8. **完整的文件夹管理在前端**
-   - 新建文件夹/子文件夹：界面上直接操作，支持多级目录
-   - 文件夹重命名：随时改名字和描述
-   - 文件夹移动/删除：移动整棵目录树，删除放回收站
-   - 文件夹描述：每个文件夹可以写说明，告诉 AI 这个文件夹放什么类型内容，方便自动分类
-   - 拖拽排序：可以调整文件夹顺序
+## Date
 
-9. **搜索检索**
-   - 全文搜索
-   - 语义搜索（找相关内容）
-   - 按项目/文件夹/标签/日期筛选
+${new Date().toISOString()}
+`;
 
-10. **自动总结**
-    - 每天自动总结每个项目的进展
-    - 对话结束后自动提炼关键点放到对应文件夹
-    - 可以一键生成项目进度报告
+    const document = await storage.createDocument({
+      projectId: project.id,
+      folderId: rootFolder.id,
+      title: 'Development Discussion',
+      content,
+      tags: ['requirements', 'discussion'],
+    });
 
-11. **权限与登录**
-    - 如果集成在飞书内：复用飞书账号登录，不需要额外登录
-    - 如果是独立 Web 界面：需要账号密码登录功能，保证只有你能访问
+    console.log(`Created first document: ${document.title} (${document.id})`);
+  }
 
-## 开发进度
+  console.log('\n✅ Initialization complete!');
+  console.log(`\nTo start the server:\n  npm start`);
+  console.log(`\nDefault login:\n  username: ${defaultUsername}\n  password: ${defaultPassword}`);
 
-所有代码已经开发完成，包括：
-- 后端核心逻辑全部完成
-- 前端构建成功
-- 飞书集成完成
-
-这是第一个项目，用来测试整个系统。
-`
-
-  await storage.createDocument({
-    projectId: project.id,
-    folderId: rootFolder.id,
-    title: '需求讨论与开发记录',
-    content: conversationContent,
-    contentType: 'result',
-    tags: ['project', 'memory-manager', 'requirement'],
-  })
-
-  console.log('✅ Initialization complete!')
-  console.log('')
-  console.log('Default admin user created:')
-  console.log('  Username: admin')
-  console.log('  Password: password')
-  console.log('')
-  console.log('First project "Personal Memory Manager" created!')
-
-  await storage.close()
+  await storage.close();
+  process.exit(0);
 }
 
-init().catch(console.error)
+main().catch(err => {
+  console.error('Initialization failed:', err);
+  process.exit(1);
+});

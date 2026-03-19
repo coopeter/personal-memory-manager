@@ -1,25 +1,13 @@
-/**
- * Personal Memory Manager - Core Types
- */
+// 核心类型定义
 
 export interface Project {
   id: string;
   name: string;
   description: string;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-}
-
-export interface Folder {
-  id: string;
-  projectId: string;
   parentId: string | null;
-  name: string;
-  description: string; // Used for AI auto-classification
   createdAt: number;
   updatedAt: number;
-  deletedAt: number | null;
+  tags: string[];
 }
 
 export interface Document {
@@ -28,56 +16,79 @@ export interface Document {
   folderId: string;
   title: string;
   content: string;
-  contentType: 'inspiration' | 'discussion' | 'result';
   tags: string[];
   createdAt: number;
   updatedAt: number;
+  deleted: boolean;
   deletedAt: number | null;
-  vectorEmbedding?: number[];
 }
 
-export interface DailyProgress {
+export interface Folder {
   id: string;
   projectId: string;
-  date: string; // YYYY-MM-DD
-  content: string;
+  parentId: string | null;
+  name: string;
+  description: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export interface TreeFolder extends Folder {
-  children: TreeFolder[];
-  documents: Document[];
+export interface User {
+  id: string;
+  username: string;
+  passwordHash: string;
+  isAdmin: boolean;
+  createdAt: number;
 }
 
-export interface ProjectTree extends Project {
-  folders: TreeFolder[];
-}
-
-// Content classification result
-export interface ClassificationResult {
+export interface SearchResult {
+  documentId: string;
+  title: string;
+  snippet: string;
+  score: number;
   projectId: string;
+  folderId: string;
+  updatedAt: number;
+}
+
+export interface ProgressEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  content: string;
+  summary: string;
+  documentIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ClassifyResult {
   folderId: string;
   confidence: number;
   reason: string;
 }
 
-// Search options
-export interface SearchOptions {
-  query?: string;
+// 存储配置
+export interface StorageConfig {
+  basePath: string;
+  useLanceDB: boolean;
+  embeddingModel?: string;
+}
+
+// 认证payload
+export interface JWTPayload {
+  userId: string;
+  username: string;
+  isAdmin: boolean;
+  iat: number;
+  exp: number;
+}
+
+// 搜索过滤
+export interface SearchFilter {
   projectId?: string;
   folderId?: string;
   tags?: string[];
   startDate?: number;
   endDate?: number;
   includeDeleted?: boolean;
-  limit?: number;
-}
-
-// Storage configuration
-export interface StorageConfig {
-  basePath: string;
-  useLanceDB: boolean;
-  provider: 'local' | 'feishu';
-  feishuFolderToken?: string;
 }
