@@ -74,7 +74,7 @@ class FeishuStorageProvider {
             updatedAt: now,
         };
         // 创建项目文件夹
-        await this.createFolder(this.baseFolderToken, newProject.name);
+        await this.createFeishuFolder(this.baseFolderToken, newProject.name);
         // 保存元数据
         await this.uploadJson(this.baseFolderToken, `.project-${id}.json`, newProject);
         return newProject;
@@ -206,14 +206,13 @@ class FeishuStorageProvider {
         const response = await axios_1.default.get(`https://open.feishu.cn/open-apis/drive/v1/files/${fileToken}/meta`, { headers: { Authorization: `Bearer ${token}` } });
         return response.data.data;
     }
-    async createFolder(parentToken, name) {
+    async createFeishuFolder(parentToken, name) {
         const token = await this.getAccessToken();
         const response = await axios_1.default.post('https://open.feishu.cn/open-apis/drive/v1/files/create_folder', {
             name,
             folder_token: parentToken,
         }, { headers: { Authorization: `Bearer ${token}` } });
-        const folderToken = response.data.data.folder_token;
-        return folderToken || '';
+        return response.data.data.folder_token || '';
     }
     async findFileByName(folderToken, name) {
         const files = await this.listFilesInFolder(folderToken);

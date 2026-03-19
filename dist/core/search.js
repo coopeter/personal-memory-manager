@@ -24,8 +24,8 @@ class SearchService {
         const fullTextResults = await this.storage.searchFullText(query, filters);
         if (this.embeddingFunction && this.supportsSemanticSearch()) {
             // 生成查询嵌入
-            const embedding = await this.embeddingFunction.embedText(query);
-            const semanticResults = await this.storage.searchSemantic(embedding, filters);
+            const embeddings = await this.embeddingFunction.embedDocuments([query]);
+            const semanticResults = await this.storage.searchSemantic(embeddings[0], filters);
             // 合并结果，去重，按分数排序
             const combined = new Map();
             for (const result of fullTextResults.concat(semanticResults)) {

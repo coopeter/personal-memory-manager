@@ -6,7 +6,7 @@ import type { Connection, Table } from '@lancedb/lancedb';
 import { OpenAIEmbeddingFunction } from '@lancedb/lancedb/embedding/openai';
 
 export class SearchService {
-  private embeddingFunction: OpenAIEmbeddingFunction | null = null;
+  private embeddingFunction: any = null;
 
   constructor(
     private storage: StorageProvider,
@@ -31,8 +31,8 @@ export class SearchService {
     
     if (this.embeddingFunction && this.supportsSemanticSearch()) {
       // 生成查询嵌入
-      const embedding = await this.embeddingFunction.embedText(query);
-      const semanticResults = await this.storage.searchSemantic(embedding, filters);
+      const embeddings = await this.embeddingFunction.embedDocuments([query]);
+      const semanticResults = await this.storage.searchSemantic(embeddings[0], filters);
       
       // 合并结果，去重，按分数排序
       const combined = new Map<string, SearchResult>();

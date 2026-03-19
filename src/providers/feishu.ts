@@ -51,8 +51,8 @@ export class FeishuStorageProvider implements StorageProvider {
     );
 
     if (response.data.code === 0) {
-      this.accessToken = response.data.tenant_access_token;
-      return this.accessToken;
+      this.accessToken = response.data.tenant_access_token!;
+      return this.accessToken!;
     }
 
     throw new Error(`Failed to get Feishu access token: ${response.data.msg}`);
@@ -100,7 +100,7 @@ export class FeishuStorageProvider implements StorageProvider {
     };
 
     // 创建项目文件夹
-    await this.createFolder(this.baseFolderToken, newProject.name);
+    await this.createFeishuFolder(this.baseFolderToken, newProject.name);
     // 保存元数据
     await this.uploadJson(this.baseFolderToken, `.project-${id}.json`, newProject);
 
@@ -268,7 +268,7 @@ export class FeishuStorageProvider implements StorageProvider {
     return response.data.data;
   }
 
-  private async createFolder(parentToken: string, name: string): Promise<string> {
+  private async createFeishuFolder(parentToken: string, name: string): Promise<string> {
     const token = await this.getAccessToken();
     const response = await axios.post(
       'https://open.feishu.cn/open-apis/drive/v1/files/create_folder',
@@ -278,8 +278,7 @@ export class FeishuStorageProvider implements StorageProvider {
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const folderToken = response.data.data.folder_token;
-    return (folderToken as string) || '';
+    return (response.data.data.folder_token as any as string) || '';
   }
 
   private async findFileByName(folderToken: string, name: string): Promise<FeishuFile | null> {
