@@ -232,5 +232,17 @@ class FeishuStorageProvider {
         // 飞书上传需要复杂的流程，这里简化
         // 实际实现需要遵循飞书开放平台文档
     }
+    // ========== 用户更新密码 ==========
+    async updateUserPassword(id, newPasswordHash) {
+        throw new Error('updateUserPassword not implemented for FeishuStorage');
+    }
+    // ========== 工作区 AI 描述缓存 ==========
+    async getWorkspaceCachedDescription(path) {
+        // Feishu storage doesn't support workspace browser yet
+        return null;
+    }
+    async saveWorkspaceCachedDescription(path, description, tags) {
+        throw new Error('Workspace browser not supported for FeishuStorage');
+    }
 }
 exports.FeishuStorageProvider = FeishuStorageProvider;

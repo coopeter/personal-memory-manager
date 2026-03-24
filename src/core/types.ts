@@ -92,3 +92,23 @@ export interface SearchFilter {
   endDate?: number;
   includeDeleted?: boolean;
 }
+
+// 工作区文件信息
+export interface WorkspaceFileInfo {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  size: number;
+  modifiedTime: number;
+  aiDescription?: string;
+  aiTags?: string[];
+}
+
+// 工作区文件 AI 描述缓存
+export interface WorkspaceFileCachedDescription {
+  path: string;
+  description: string;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+}

@@ -1,0 +1,15 @@
+{
+  "projectId": "e94c11a7-28ef-4716-8e0d-5e473fe992b0",
+  "folderId": "3ebb4ce1-743e-4be1-8704-13451eb2db0d",
+  "title": "Development Discussion",
+  "content": "# Personal Memory Manager Development Discussion\n\nThis document contains the complete development discussion for the Personal Memory Manager OpenClaw Skill.\n\n## Requirements\n\n1. ✅ Automatically record all conversations, categorized by projects and user-defined folders\n2. ✅ Provides semantic/full-text search, progress tracking\n3. ✅ Responsive web management interface\n4. ✅ Distributable as reusable OpenClaw Skill, no mandatory Feishu dependency\n5. ✅ Optional Feishu integration\n6. ✅ Standalone version with account/password login\n7. ✅ Feishu version can reuse Feishu authentication\n\n## Technology Stack\n\n- Backend: TypeScript + Express + LanceDB + JWT + Zod\n- Frontend: React 18 + TypeScript + Tailwind CSS\n- Storage: LanceDB for vector search/metadata, Markdown files for original content\n\n## Date\n\n2026-03-19T23:19:19.490Z\n",
+  "tags": [
+    "requirements",
+    "discussion"
+  ],
+  "id": "d420eda7-b136-484d-9b06-80eaf3050a98",
+  "createdAt": 1773962359490,
+  "updatedAt": 1773962359490,
+  "deleted": false,
+  "deletedAt": null
+}

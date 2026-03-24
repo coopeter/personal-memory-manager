@@ -7,6 +7,8 @@ import DocumentView from './components/DocumentView'
 import Search from './components/Search'
 import Trash from './components/Trash'
 import Progress from './components/Progress'
+import WorkspaceBrowser from './components/WorkspaceBrowser'
+import Settings from './components/Settings'
 import { api } from './utils/api'
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
             <Route path="/search" element={<Search />} />
             <Route path="/trash" element={<Trash />} />
             <Route path="/progress/:projectId" element={<Progress />} />
+            <Route path="/workspace" element={<WorkspaceBrowser />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         )}

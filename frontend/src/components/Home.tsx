@@ -136,9 +136,21 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
+          <Link
+            to="/workspace"
+            className="block w-full px-2 py-1 bg-green-100 hover:bg-green-200 rounded text-sm text-center"
+          >
+            🌐 Workspace Browser
+          </Link>
+          <Link
+            to="/settings"
+            className="block w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-center"
+          >
+            ⚙️ Settings
+          </Link>
           <button
-            className="w-full px-2 py-1 bg-gray-200 rounded text-sm"
+            className="w-full px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
             onClick={handleLogout}
           >
             Logout

@@ -58,6 +58,7 @@ class LocalStorageProvider {
         await this.ensureDir(path.join(this.basePath, 'users'));
         await this.ensureDir(path.join(this.basePath, 'progress'));
         await this.ensureDir(path.join(this.basePath, 'lancedb'));
+        await this.ensureDir(path.join(this.basePath, 'workspace-cache'));
         // 初始化LanceDB
         if (this.useLanceDB) {
             this.db = await (0, lancedb_1.connect)(path.join(this.basePath, 'lancedb'));
@@ -394,6 +395,40 @@ class LocalStorageProvider {
         if (fs.existsSync(filePath)) {
             await fs.promises.unlink(filePath);
         }
+    }
+    // ========== 用户更新密码 ==========
+    async updateUserPassword(id, newPasswordHash) {
+        const existing = await this.getUser(id);
+        if (!existing)
+            throw new Error(`User ${id} not found`);
+        const updated = {
+            ...existing,
+            passwordHash: await bcrypt.hash(newPasswordHash, 10),
+        };
+        await this.writeJson(path.join(this.basePath, 'users', `${id}.json`), updated);
+        return updated;
+    }
+    // ========== 工作区 AI 描述缓存 ==========
+    getCacheFilePath(filePath) {
+        // 路径中替换 / 为 _ 作为文件名
+        const safeName = filePath.replace(/\//g, '_').replace(/\\/g, '_').replace(/:/g, '_');
+        return path.join(this.basePath, 'workspace-cache', `${safeName}.json`);
+    }
+    async getWorkspaceCachedDescription(filePath) {
+        return this.readJson(this.getCacheFilePath(filePath));
+    }
+    async saveWorkspaceCachedDescription(filePath, description, tags) {
+        const existing = await this.getWorkspaceCachedDescription(filePath);
+        const now = Date.now();
+        const entry = {
+            path: filePath,
+            description,
+            tags,
+            createdAt: existing?.createdAt || now,
+            updatedAt: now,
+        };
+        await this.writeJson(this.getCacheFilePath(filePath), entry);
+        return entry;
     }
 }
 exports.LocalStorageProvider = LocalStorageProvider;

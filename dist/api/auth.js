@@ -82,3 +82,37 @@ function requireAdmin(req, res, next) {
     }
     next();
 }
+/**
+ * 修改密码
+ * PUT /api/auth/password
+ * { currentPassword: string, newPassword: string }
+ */
+exports.authRouter.put('/password', authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userPayload = req.user;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password are required' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters' });
+        }
+        const user = await index_1.services.storage.getUser(userPayload.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // Verify current password
+        const passwordMatch = await bcrypt_1.default.compare(currentPassword, user.passwordHash);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+        // Update password
+        const passwordHash = await bcrypt_1.default.hash(newPassword, 10);
+        await index_1.services.storage.updateUserPassword(user.id, passwordHash);
+        res.json({ success: true, message: 'Password updated successfully' });
+    }
+    catch (err) {
+        console.error('Change password error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});

@@ -1,6 +1,6 @@
 // 存储层抽象 - 定义存储接口
 
-import type { Project, Document, Folder, User, SearchResult, ProgressEntry } from './types';
+import type { Project, Document, Folder, User, SearchResult, ProgressEntry, WorkspaceFileCachedDescription } from './types';
 
 export interface StorageProvider {
   // 项目操作
@@ -32,6 +32,7 @@ export interface StorageProvider {
   getUserByUsername(username: string): Promise<User | null>;
   getUser(id: string): Promise<User | null>;
   createUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User>;
+  updateUserPassword(id: string, newPasswordHash: string): Promise<User>;
 
   // 搜索
   searchFullText(query: string, filters?: SearchFilter): Promise<SearchResult[]>;
@@ -44,6 +45,10 @@ export interface StorageProvider {
   listProgress(startDate: string, endDate: string): Promise<ProgressEntry[]>;
   saveProgress(entry: Omit<ProgressEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProgressEntry>;
   updateProgress(id: string, entry: Partial<ProgressEntry>): Promise<ProgressEntry>;
+
+  // 工作区 AI 描述缓存
+  getWorkspaceCachedDescription(path: string): Promise<WorkspaceFileCachedDescription | null>;
+  saveWorkspaceCachedDescription(path: string, description: string, tags: string[]): Promise<WorkspaceFileCachedDescription>;
 
   // 初始化
   initialize(): Promise<void>;

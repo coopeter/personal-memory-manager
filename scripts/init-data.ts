@@ -1,5 +1,8 @@
 // 初始化数据脚本 - 创建默认管理员账号和第一个项目
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { LocalStorageProvider } from '../src/providers/local';
 import { ProjectManager } from '../src/core/project';
 

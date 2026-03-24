@@ -4,7 +4,8 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { 
-  Project, Document, Folder, User, SearchResult, ProgressEntry, StorageConfig, SearchFilter 
+  Project, Document, Folder, User, SearchResult, ProgressEntry, StorageConfig, SearchFilter,
+  WorkspaceFileCachedDescription
 } from '../core/types';
 import type { StorageProvider } from '../core/storage';
 
@@ -303,5 +304,20 @@ export class FeishuStorageProvider implements StorageProvider {
     const content = JSON.stringify(data, null, 2);
     // 飞书上传需要复杂的流程，这里简化
     // 实际实现需要遵循飞书开放平台文档
+  }
+
+  // ========== 用户更新密码 ==========
+  async updateUserPassword(id: string, newPasswordHash: string): Promise<User> {
+    throw new Error('updateUserPassword not implemented for FeishuStorage');
+  }
+
+  // ========== 工作区 AI 描述缓存 ==========
+  async getWorkspaceCachedDescription(path: string): Promise<WorkspaceFileCachedDescription | null> {
+    // Feishu storage doesn't support workspace browser yet
+    return null;
+  }
+
+  async saveWorkspaceCachedDescription(path: string, description: string, tags: string[]): Promise<WorkspaceFileCachedDescription> {
+    throw new Error('Workspace browser not supported for FeishuStorage');
   }
 }

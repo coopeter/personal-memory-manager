@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 
 import type { 
-  Project, Document, Folder, User, SearchResult, ProgressEntry, StorageConfig, SearchFilter 
+  Project, Document, Folder, User, SearchResult, ProgressEntry, StorageConfig, SearchFilter,
+  WorkspaceFileCachedDescription
 } from '../core/types';
 import type { StorageProvider } from '../core/storage';
 
@@ -31,6 +32,7 @@ export class LocalStorageProvider implements StorageProvider {
     await this.ensureDir(path.join(this.basePath, 'users'));
     await this.ensureDir(path.join(this.basePath, 'progress'));
     await this.ensureDir(path.join(this.basePath, 'lancedb'));
+    await this.ensureDir(path.join(this.basePath, 'workspace-cache'));
 
     // 初始化LanceDB
     if (this.useLanceDB) {
@@ -388,5 +390,42 @@ export class LocalStorageProvider implements StorageProvider {
     if (fs.existsSync(filePath)) {
       await fs.promises.unlink(filePath);
     }
+  }
+
+  // ========== 用户更新密码 ==========
+  async updateUserPassword(id: string, newPasswordHash: string): Promise<User> {
+    const existing = await this.getUser(id);
+    if (!existing) throw new Error(`User ${id} not found`);
+    const updated: User = {
+      ...existing,
+      passwordHash: await bcrypt.hash(newPasswordHash, 10),
+    };
+    await this.writeJson(path.join(this.basePath, 'users', `${id}.json`), updated);
+    return updated;
+  }
+
+  // ========== 工作区 AI 描述缓存 ==========
+  private getCacheFilePath(filePath: string): string {
+    // 路径中替换 / 为 _ 作为文件名
+    const safeName = filePath.replace(/\//g, '_').replace(/\\/g, '_').replace(/:/g, '_');
+    return path.join(this.basePath, 'workspace-cache', `${safeName}.json`);
+  }
+
+  async getWorkspaceCachedDescription(filePath: string): Promise<WorkspaceFileCachedDescription | null> {
+    return this.readJson<WorkspaceFileCachedDescription>(this.getCacheFilePath(filePath));
+  }
+
+  async saveWorkspaceCachedDescription(filePath: string, description: string, tags: string[]): Promise<WorkspaceFileCachedDescription> {
+    const existing = await this.getWorkspaceCachedDescription(filePath);
+    const now = Date.now();
+    const entry: WorkspaceFileCachedDescription = {
+      path: filePath,
+      description,
+      tags,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    };
+    await this.writeJson(this.getCacheFilePath(filePath), entry);
+    return entry;
   }
 }

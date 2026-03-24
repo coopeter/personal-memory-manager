@@ -1,5 +1,9 @@
 // Express API 主入口
 
+import dotenv from 'dotenv';
+// Load environment variables from .env file
+dotenv.config();
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -7,6 +11,7 @@ import { authRouter } from './auth';
 import { projectRouter } from './project';
 import { documentRouter } from './document';
 import { searchRouter } from './search';
+import { workspaceRouter } from './workspace';
 import { LocalStorageProvider } from '../providers/local';
 import { ProjectManager } from '../core/project';
 import { SearchService } from '../core/search';
@@ -21,7 +26,9 @@ const openaiApiKey = process.env.OPENAI_API_KEY;
 // 中间件
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('frontend/dist'));
+// Serve frontend static files - use absolute path relative to project root
+const projectRoot = __dirname + '/../../';
+app.use(express.static(projectRoot + 'frontend/dist'));
 
 // 初始化存储和服务
 const storage = new LocalStorageProvider({
@@ -42,6 +49,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/projects', projectRouter);
 app.use('/api/documents', documentRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/workspace', workspaceRouter);
 
 // 启动服务
 export async function start() {

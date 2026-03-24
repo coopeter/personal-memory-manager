@@ -6,6 +6,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.services = exports.app = void 0;
 exports.start = start;
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables from .env file
+dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
@@ -13,6 +16,7 @@ const auth_1 = require("./auth");
 const project_1 = require("./project");
 const document_1 = require("./document");
 const search_1 = require("./search");
+const workspace_1 = require("./workspace");
 const local_1 = require("../providers/local");
 const project_2 = require("../core/project");
 const search_2 = require("../core/search");
@@ -25,7 +29,9 @@ const openaiApiKey = process.env.OPENAI_API_KEY;
 // 中间件
 exports.app.use((0, cors_1.default)());
 exports.app.use(body_parser_1.default.json());
-exports.app.use(express_1.default.static('frontend/dist'));
+// Serve frontend static files - use absolute path relative to project root
+const projectRoot = __dirname + '/../../';
+exports.app.use(express_1.default.static(projectRoot + 'frontend/dist'));
 // 初始化存储和服务
 const storage = new local_1.LocalStorageProvider({
     basePath: dataPath,
@@ -43,6 +49,7 @@ exports.app.use('/api/auth', auth_1.authRouter);
 exports.app.use('/api/projects', project_1.projectRouter);
 exports.app.use('/api/documents', document_1.documentRouter);
 exports.app.use('/api/search', search_1.searchRouter);
+exports.app.use('/api/workspace', workspace_1.workspaceRouter);
 // 启动服务
 async function start() {
     await storage.initialize();
